@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # ARCH
-arch=$(uname -a)
+architecture=$(uname -a)
 
-# CPU PHYSICAL
-cpuf=$(grep "physical id" /proc/cpuinfo | wc -l)
+# Physical Cores
+cpu_physical=$(lscpu | grep "Core(s) per socket" | awk '{print $NF}')
 
-# CPU VIRTUAL
-cpuv=$(grep "processor" /proc/cpuinfo | wc -l)
+# Virtual Cores
+cpuv=$(lscpu | grep "Thread(s) per core" | awk '{print $NF}')
 
-# RAM
+# RAM (Available and Percentage)
 ram_total=$(free --mega | awk '$1 == "Mem:" {print $2}')
 ram_use=$(free --mega | awk '$1 == "Mem:" {print $3}')
 ram_percent=$(free --mega | awk '$1 == "Mem:" {printf("%.2f"), $3/$2*100}')
@@ -27,10 +27,10 @@ cpu_fin=$(printf "%.1f" $cpu_op)
 # LAST BOOT
 lb=$(who -b | awk '$1 == "system" {print $3 " " $4}')
 
-# LVM USE
+# If LVM is active or not
 lvmu=$(if [ $(lsblk | grep "lvm" | wc -l) -gt 0 ]; then echo yes; else echo no; fi)
 
-# TCP CONNEXIONS
+# TCP (Transmission Control Protocol) Active Connections
 tcpc=$(ss -ta | grep ESTAB | wc -l)
 
 # USER LOG
@@ -40,18 +40,18 @@ ulog=$(users | wc -w)
 ip=$(hostname -I)
 mac=$(ip link | grep "link/ether" | awk '{print $2}')
 
-# SUDO
+# Number of Commands used by SUDO
 cmnd=$(journalctl _COMM=sudo | grep COMMAND | wc -l)
 
-wall "	Architecture: $arch
-	CPU physical: $cpuf
+wall "	Architecture: $architecture
+	CPU physical: $cpu_physical
 	vCPU: $cpuv
 	Memory Usage: $ram_use/${ram_total}MB ($ram_percent%)
 	Disk Usage: $disk_use/${disk_total} ($disk_percent%)
 	CPU load: $cpu_fin%
 	Last boot: $lb
 	LVM use: $lvmu
-	Connections TCP: $tcpc ESTABLISHED
+	TCP Connections: $tcpc ESTABLISHED
 	User log: $ulog
 	Network: IP $ip ($mac)
 	Sudo: $cmnd cmd"
